@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { IntakePanel } from "@/components/intake-panel";
+import { EngineStatus } from "@/components/engine-status";
 import { Report } from "@/components/report";
 import { useScanner } from "@/hooks/use-scanner";
 import { displayPath, planIntake } from "@/lib/scan/intake";
@@ -46,7 +47,11 @@ export function Scanner() {
     }
 
     if (inputs.length === 0) {
-      setNotice("Nothing to scan yet — paste some text, add a text-bearing file, or pick a sample.");
+      setNotice(
+        plan.skipped.length > 0
+          ? "Every selected file was rejected by the size caps. See the skipped list below."
+          : "Nothing to scan yet — paste some text, add a file, or pick a sample.",
+      );
       return;
     }
     setScanId((n) => n + 1);
@@ -143,6 +148,8 @@ export function Scanner() {
           </div>
 
           <div className="min-w-0 space-y-3">
+            <EngineStatus />
+
             <div className="ss-panel flex flex-wrap items-center gap-3 px-4 py-2.5">
               <span className="ss-label">Pipeline</span>
               {LAYERS.map((l, i) => (

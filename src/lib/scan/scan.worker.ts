@@ -10,7 +10,13 @@ const ctx = self as unknown as {
 
 ctx.addEventListener("message", (ev: MessageEvent) => {
   const msg = ev.data as ScanRequest;
-  if (!msg || msg.type !== "scan") return;
+  if (!msg) return;
+
+  if (msg.type === "ping") {
+    ctx.postMessage({ type: "pong", id: msg.id } satisfies ScanResponse);
+    return;
+  }
+  if (msg.type !== "scan") return;
 
   let response: ScanResponse;
   void (async () => {

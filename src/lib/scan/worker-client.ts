@@ -1,6 +1,12 @@
 import { scanRawFiles } from "./engine";
 import type { RawScanFile, ScanReport } from "./types";
-import { ENGINE_DEADLINE_MS, HARD_KILL_MS, type ScanRequest, type ScanResponse } from "./worker-protocol";
+import {
+  ENGINE_DEADLINE_MS,
+  HANDSHAKE_MS,
+  HARD_KILL_MS,
+  type ScanRequest,
+  type ScanResponse,
+} from "./worker-protocol";
 
 export type ScanMode = "worker" | "main-thread";
 
@@ -16,45 +22,79 @@ export class ScanTimeoutError extends Error {
   }
 }
 
-async function onMainThread(raw: RawScanFile[]): Promise<RunResult> {
+function uid(): string {
+  const c = globalThis.crypto as Crypto | undefined;
+  if (c && typeof c.randomUUID === "function") return c.randomUUID();
+  return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const yieldToPaint = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+async function mainThread(raw: RawScanFile[]): Promise<RunResult> {
+  await yieldToPaint();
   return { report: await scanRawFiles(raw, ENGINE_DEADLINE_MS), mode: "main-thread" };
 }
 
-export function runScan(raw: RawScanFile[]): Promise<RunResult> {
-  return new Promise<RunResult>((resolve, reject) => {
+/**
+ * The worker must answer a handshake before it is trusted. A chunk that 404s or
+ * is blocked by CSP can fail without firing onerror, so silence is treated as
+ * failure and we fall back rather than hanging.
+ */
+function attemptWorker(raw: RawScanFile[]): Promise<RunResult | null> {
+  return new Promise((resolve) => {
     let worker: Worker;
     try {
       worker = new Worker(new URL("./scan.worker.ts", import.meta.url), { type: "module" });
     } catch {
-      void onMainThread(raw).then(resolve, reject);
+      resolve(null);
       return;
     }
 
-    const id = crypto.randomUUID();
-    let settled = false;
+    const id = uid();
+    let done = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const finish = (action: () => void) => {
-      if (settled) return;
-      settled = true;
-      if (killTimer) clearTimeout(killTimer);
-      worker.terminate();
-      action();
+    const settle = (value: RunResult | null) => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      try { worker.terminate(); } catch { /* already gone */ }
+      resolve(value);
     };
-
-    const killTimer = setTimeout(() => finish(() => reject(new ScanTimeoutError())), HARD_KILL_MS);
 
     worker.onmessage = (ev: MessageEvent<ScanResponse>) => {
       const msg = ev.data;
       if (!msg || msg.id !== id) return;
-      if (msg.type === "result") finish(() => resolve({ report: msg.report, mode: "worker" }));
-      else finish(() => reject(new Error(msg.message)));
+
+      if (msg.type === "pong") {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => settle(null), HARD_KILL_MS);
+        const request: ScanRequest = { type: "scan", id, raw, deadlineMs: ENGINE_DEADLINE_MS };
+        try {
+          worker.postMessage(request);
+        } catch {
+          settle(null);
+        }
+        return;
+      }
+      if (msg.type === "result") settle({ report: msg.report, mode: "worker" });
+      else settle(null);
     };
 
-    worker.onerror = () => {
-      finish(() => { void onMainThread(raw).then(resolve, reject); });
-    };
+    worker.onerror = () => settle(null);
+    worker.onmessageerror = () => settle(null);
 
-    const request: ScanRequest = { type: "scan", id, raw, deadlineMs: ENGINE_DEADLINE_MS };
-    worker.postMessage(request);
+    timer = setTimeout(() => settle(null), HANDSHAKE_MS);
+    try {
+      worker.postMessage({ type: "ping", id } satisfies ScanRequest);
+    } catch {
+      settle(null);
+    }
   });
+}
+
+export async function runScan(raw: RawScanFile[]): Promise<RunResult> {
+  const viaWorker = await attemptWorker(raw);
+  if (viaWorker) return viaWorker;
+  return mainThread(raw);
 }

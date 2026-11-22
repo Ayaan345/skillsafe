@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { runScan, ScanTimeoutError, type ScanMode } from "@/lib/scan/worker-client";
+import { runScan, type ScanMode } from "@/lib/scan/worker-client";
 import type { RawScanFile, ScanReport } from "@/lib/scan/types";
+
+const WATCHDOG_MS = 12_000;
 
 export type ScannerState =
   | { status: "idle" }
@@ -18,23 +20,41 @@ export function useScanner() {
     if (busy.current) return;
     busy.current = true;
     setState({ status: "running" });
+
+    let finished = false;
+    const release = () => { finished = true; busy.current = false; };
+
+    // Nothing may leave the controls permanently locked, whatever happens below.
+    const watchdog = setTimeout(() => {
+      if (finished) return;
+      release();
+      setState({
+        status: "error",
+        message: "The scan did not return in time and was released. Try again, or use a smaller input.",
+      });
+    }, WATCHDOG_MS);
+
     try {
       const { report, mode } = await runScan(raw);
+      if (finished) return;
+      clearTimeout(watchdog);
+      release();
       setState({ status: "done", report, mode });
     } catch (err) {
-      const message =
-        err instanceof ScanTimeoutError
-          ? "Scan exceeded the 2000ms safety limit and was terminated. Try a smaller input."
-          : err instanceof Error
-            ? err.message
-            : "Scan failed.";
-      setState({ status: "error", message });
-    } finally {
-      busy.current = false;
+      if (finished) return;
+      clearTimeout(watchdog);
+      release();
+      setState({
+        status: "error",
+        message: err instanceof Error ? err.message : "Scan failed.",
+      });
     }
   }, []);
 
-  const reset = useCallback(() => setState({ status: "idle" }), []);
+  const reset = useCallback(() => {
+    busy.current = false;
+    setState({ status: "idle" });
+  }, []);
 
   return { state, scan, reset };
 }
