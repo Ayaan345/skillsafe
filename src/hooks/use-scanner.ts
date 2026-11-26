@@ -9,7 +9,7 @@ const WATCHDOG_MS = 12_000;
 export type ScannerState =
   | { status: "idle" }
   | { status: "running" }
-  | { status: "done"; report: ScanReport; mode: ScanMode }
+  | { status: "done"; report: ScanReport; mode: ScanMode; raw: RawScanFile[] }
   | { status: "error"; message: string };
 
 export function useScanner() {
@@ -39,7 +39,7 @@ export function useScanner() {
       if (finished) return;
       clearTimeout(watchdog);
       release();
-      setState({ status: "done", report, mode });
+      setState({ status: "done", report, mode, raw });
     } catch (err) {
       if (finished) return;
       clearTimeout(watchdog);

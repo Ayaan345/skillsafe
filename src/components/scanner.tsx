@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { IntakePanel } from "@/components/intake-panel";
+import Link from "next/link";
 import { EngineStatus } from "@/components/engine-status";
+import { IntakePanel } from "@/components/intake-panel";
 import { Report } from "@/components/report";
 import { useScanner } from "@/hooks/use-scanner";
 import { displayPath, planIntake } from "@/lib/scan/intake";
@@ -19,6 +20,17 @@ const LAYERS = [
   { id: "L6", name: "Supply" },
 ];
 
+const COVERAGE: Array<[string, string, string]> = [
+  ["1", "Prompt injection", "Override, jailbreak and exfiltration phrasing"],
+  ["2", "Hidden content", "Zero-width, bidi, tag smuggling, encoded blobs"],
+  ["3", "Deceptive links", "Anchor mismatch, punycode, raw IP, data: URIs"],
+  ["4", "Dangerous code", "eval, download-to-shell, decode-then-run, indirection"],
+  ["5", "Secrets", "Credential paths, secret read near a network call"],
+  ["6", "Over-broad scope", "Full-access and whole-filesystem claims"],
+  ["7", "Supply chain", "Typosquats and install-hook payloads"],
+  ["10", "Embedded assets", "SVG scripts, image and font metadata, polyglots"],
+];
+
 export function Scanner() {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -27,9 +39,8 @@ export function Scanner() {
   const [scanId, setScanId] = useState(0);
   const { state, scan, reset } = useScanner();
 
-  const addFiles = useCallback((incoming: FileList | null) => {
-    if (!incoming) return;
-    setFiles((prev) => [...prev, ...Array.from(incoming)].slice(0, 300));
+  const addFiles = useCallback((picked: File[]) => {
+    setFiles((prev) => [...prev, ...picked].slice(0, 300));
   }, []);
 
   const runScan = useCallback(async () => {
@@ -38,9 +49,7 @@ export function Scanner() {
     setSkipped(plan.skipped);
 
     const inputs: RawScanFile[] = [];
-    if (text.trim().length > 0) {
-      inputs.push({ path: "SKILL.md", bytes: new TextEncoder().encode(text) });
-    }
+    if (text.trim().length > 0) inputs.push({ path: "SKILL.md", bytes: new TextEncoder().encode(text) });
     for (const i of plan.accepted) {
       const file = files[i];
       inputs.push({ path: displayPath(file.name), bytes: new Uint8Array(await file.arrayBuffer()) });
@@ -50,7 +59,7 @@ export function Scanner() {
       setNotice(
         plan.skipped.length > 0
           ? "Every selected file was rejected by the size caps. See the skipped list below."
-          : "Nothing to scan yet — paste some text, add a file, or pick a sample.",
+          : "Nothing to scan yet — paste some text, choose a file, or pick a sample.",
       );
       return;
     }
@@ -68,19 +77,12 @@ export function Scanner() {
   }, [scan]);
 
   const onClear = useCallback(() => {
-    setText("");
-    setFiles([]);
-    setSkipped([]);
-    setNotice(null);
-    reset();
+    setText(""); setFiles([]); setSkipped([]); setNotice(null); reset();
   }, [reset]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        void runScan();
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); void runScan(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -103,7 +105,7 @@ export function Scanner() {
           </svg>
           <span className="text-[15px] font-bold tracking-tight">SkillSafe</span>
         </div>
-        <span className="ss-chip">
+        <span className="ss-chip hidden sm:inline-flex">
           <span className="ss-dot" />
           on-device · nothing uploaded
         </span>
@@ -111,39 +113,31 @@ export function Scanner() {
           {state.status === "done" ? (
             <a href="#findings" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">Findings</a>
           ) : null}
+          <Link href="/rules" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">Rule catalog</Link>
+          <Link href="/history" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">History</Link>
           <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={onClear} disabled={running}>
             Reset
           </button>
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-[1320px] px-4 pb-16 pt-[calc(var(--bar-h)+26px)]">
+      <main className="ss-main relative z-10 mx-auto max-w-[1320px] px-4">
         <div className="mb-5">
           <h1 className="text-[26px] font-bold leading-tight tracking-tight sm:text-[32px]">
-            Read a skill before it reads{" "}
-            <span className="bg-gradient-to-r from-[#3df5c4] via-[#4da3ff] to-[#a78bfa] bg-clip-text text-transparent">
-              you
-            </span>
-            .
+            Read a skill before it reads <span className="ss-headline">you</span>.
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-[#8fa3bf]">
-            Prompt injection, hidden Unicode, deceptive links, dangerous code and over-broad scope —
-            checked in your browser, in under a second, with no account and no upload.
+            Prompt injection, hidden Unicode, deceptive links, dangerous code, supply-chain hooks and
+            asset payloads — checked in your browser, with no account and no upload.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-          <div className="lg:sticky lg:top-[calc(var(--bar-h)+18px)] lg:self-start">
+        <div className="ss-layout">
+          <div className="ss-sticky">
             <IntakePanel
-              text={text}
-              onText={setText}
-              files={files}
-              onFiles={addFiles}
+              text={text} onText={setText} files={files} onFiles={addFiles}
               onRemoveFile={(i) => setFiles((prev) => prev.filter((_, j) => j !== i))}
-              onScan={runScan}
-              onClear={onClear}
-              onSample={onSample}
-              running={running}
+              onScan={runScan} onClear={onClear} onSample={onSample} running={running}
             />
           </div>
 
@@ -153,15 +147,13 @@ export function Scanner() {
             <div className="ss-panel flex flex-wrap items-center gap-3 px-4 py-2.5">
               <span className="ss-label">Pipeline</span>
               {LAYERS.map((l, i) => (
-                <span
-                  key={l.id}
+                <span key={l.id}
                   className={`text-xs font-semibold ${running ? "ss-layer-on" : "text-[#8296b3]"}`}
-                  style={running ? { animationDelay: `${i * 0.14}s` } : undefined}
-                >
+                  style={running ? { animationDelay: `${i * 0.12}s` } : undefined}>
                   {l.id} <span className="font-normal">{l.name}</span>
                 </span>
               ))}
-              <span className="ml-auto text-[11px] text-[#8296b3]">zip · assets · hashes on · deep layers off</span>
+              <span className="ml-auto text-[11px] text-[#8296b3]">45/45 rules · deep layers opt-in</span>
             </div>
 
             {notice ? (
@@ -182,14 +174,12 @@ export function Scanner() {
             ) : null}
 
             {state.status === "error" ? (
-              <p className="ss-panel border-l-2 border-l-[#ff3b5c] p-4 text-sm text-[#ff3b5c]">
-                {state.message}
-              </p>
+              <p className="ss-panel border-l-2 border-l-[#ff3b5c] p-4 text-sm text-[#ff3b5c]">{state.message}</p>
             ) : null}
 
             {running ? (
               <div role="status" className="ss-panel ss-sweep p-8 text-center text-sm text-[#8fa3bf]">
-                Running bounded patterns, entropy and Unicode forensics…
+                Extracting, hashing and running bounded patterns…
               </div>
             ) : null}
 
@@ -197,14 +187,7 @@ export function Scanner() {
               <div className="ss-panel p-6">
                 <div className="ss-label">What gets inspected</div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {[
-                    ["1", "Prompt injection", "Override, jailbreak and exfiltration phrasing"],
-                    ["2", "Hidden content", "Zero-width, bidi, tag smuggling, encoded blobs"],
-                    ["3", "Deceptive links", "Anchor mismatch, punycode, raw IP, data: URIs"],
-                    ["4", "Dangerous code", "eval, download-to-shell, decode-then-run"],
-                    ["5", "Secrets", "Credential paths, secret read near a network call"],
-                    ["6", "Over-broad scope", "Full-access and whole-filesystem claims"],
-                  ].map(([n, title, desc]) => (
+                  {COVERAGE.map(([n, title, desc]) => (
                     <div key={n} className="rounded-lg border border-[#18233c] bg-[#0b1120] p-3">
                       <div className="text-[13px] font-semibold">
                         <span className="text-[#8296b3]">{n}.</span> {title}
@@ -214,14 +197,14 @@ export function Scanner() {
                   ))}
                 </div>
                 <p className="mt-4 text-xs text-[#8296b3]">
-                  Pick a sample on the left to see a full report immediately.
+                  Pick a sample on the left for a full report immediately, or choose a .zip skill folder.
                 </p>
               </div>
             ) : null}
 
             {state.status === "done" ? (
               <div id="findings" className="ss-section">
-                <Report key={scanId} report={state.report} mode={state.mode} />
+                <Report key={scanId} report={state.report} mode={state.mode} raw={state.raw} />
               </div>
             ) : null}
           </div>

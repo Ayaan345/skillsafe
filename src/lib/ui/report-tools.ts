@@ -2,6 +2,7 @@ import { aggregate } from "@/lib/scan/score";
 import type { Finding, ScanReport, Severity } from "@/lib/scan/types";
 
 export type SortKey = "severity" | "file" | "rule";
+export type GroupMode = "category" | "file" | "severity";
 
 export const ALL_SEVERITIES: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 
@@ -12,6 +13,12 @@ export interface FilterState {
 }
 
 export const DEFAULT_FILTERS: FilterState = { query: "", severities: [], sort: "severity" };
+
+export const FILTER_PRESETS: Array<{ id: string; label: string; state: FilterState }> = [
+  { id: "all", label: "Everything", state: DEFAULT_FILTERS },
+  { id: "blocking", label: "Blocking only", state: { query: "", severities: ["CRITICAL", "HIGH"], sort: "severity" } },
+  { id: "code", label: "Code & secrets", state: { query: "", severities: [], sort: "file" } },
+];
 
 export function findingKey(f: Finding): string {
   return `${f.ruleId}|${f.file}|${f.start}`;
@@ -46,7 +53,53 @@ export function filterFindings(findings: Finding[], state: FilterState): Finding
   return out;
 }
 
-/** Recompute the verdict from the findings the reviewer has not dismissed. */
+export interface DisplayGroup {
+  key: string;
+  title: string;
+  subtitle: string;
+  findings: Finding[];
+  topSeverity: Severity;
+}
+
+export function groupForDisplay(findings: Finding[], mode: GroupMode): DisplayGroup[] {
+  const map = new Map<string, DisplayGroup>();
+
+  for (const f of findings) {
+    const key = mode === "category" ? `c${f.category}` : mode === "file" ? f.file : f.severity;
+    const title =
+      mode === "category" ? `${f.category}. ${f.categoryName}` : mode === "file" ? f.file : f.severity;
+    const subtitle =
+      mode === "category" ? "vulnerability category" : mode === "file" ? "file" : "severity band";
+
+    let group = map.get(key);
+    if (!group) {
+      group = { key, title, subtitle, findings: [], topSeverity: f.severity };
+      map.set(key, group);
+    }
+    group.findings.push(f);
+    if (ALL_SEVERITIES.indexOf(f.severity) < ALL_SEVERITIES.indexOf(group.topSeverity)) {
+      group.topSeverity = f.severity;
+    }
+  }
+
+  const groups = [...map.values()];
+  for (const g of groups) {
+    g.findings.sort(
+      (a, b) =>
+        ALL_SEVERITIES.indexOf(a.severity) - ALL_SEVERITIES.indexOf(b.severity) ||
+        a.file.localeCompare(b.file) ||
+        a.line - b.line ||
+        a.start - b.start,
+    );
+  }
+  groups.sort(
+    (a, b) =>
+      ALL_SEVERITIES.indexOf(a.topSeverity) - ALL_SEVERITIES.indexOf(b.topSeverity) ||
+      a.title.localeCompare(b.title),
+  );
+  return groups;
+}
+
 export function recompute(report: ScanReport, dismissed: ReadonlySet<string>): ScanReport {
   const active = report.findings.filter((f) => !dismissed.has(findingKey(f)));
   return aggregate(active, report.filesScanned, report.durationMs, report.truncated, report.layersRun);
@@ -63,6 +116,8 @@ export function buildExport(report: ScanReport, dismissed: ReadonlySet<string>):
       durationMs: report.durationMs,
       layersRun: report.layersRun,
       truncated: report.truncated,
+      bundleHash: report.bundleHash ?? null,
+      fileHashes: report.hashes ?? [],
       verdict: effective.verdict,
       label: effective.label,
       score: effective.score,

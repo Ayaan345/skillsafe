@@ -66,8 +66,8 @@ export const RULES: Rule[] = [
     { pattern: /\b(?:disable|bypass|circumvent|deactivate|remove|turn\s{1,3}off)\b[^\n]{0,30}?\b(?:safety|security|content|moderation|ethical)[\s-]{0,3}(?:filters?|guardrails?|restrictions?|safeguards?|policies|checks?)\b/gi }),
 
   rule("inj-008", 1, "MEDIUM", "L8", "Semantic manipulative intent",
-    "Paraphrased injection that fixed patterns cannot match.",
-    "Requires the optional classification-only deep scan.",
+    "A classification-only model judged this passage to be manipulating an AI agent, without it matching any fixed phrasing template. Model output is a signal for human judgement, not a verdict.",
+    "Read the passage yourself and decide whether it describes a task or tries to steer the agent. Rewrite or remove anything that does the latter.",
     { status: "deep" }),
 
   // ---------- Category 2: Obfuscation ----------
@@ -122,8 +122,8 @@ export const RULES: Rule[] = [
     "Remove it. Inline executable payloads have no place in a skill bundle."),
 
   rule("lnk-007", 3, "HIGH", "L5", "Live reputation hit",
-    "Destination appears on a malware/phishing reputation feed.",
-    "Requires the optional deep scan (Google Safe Browsing).",
+    "The live destination is currently listed by Google Safe Browsing as malware, phishing, or unwanted software. This is about where the link actually goes, not how it is worded.",
+    "Do not follow the link and do not install the skill. Remove the destination, or confirm the listing is a false positive with the provider before proceeding.",
     { status: "deep" }),
 
   // ---------- Category 4: Code risk ----------
@@ -189,8 +189,9 @@ export const RULES: Rule[] = [
     "An install-time hook script contains a code-execution pattern.",
     "Remove or rewrite the lifecycle hook. Install-time scripts run with the installer's privileges."),
   rule("sup-003", 7, "HIGH", "L6", "Known-vulnerable pinned version",
-    "A pinned dependency version has a disclosed advisory.",
-    "Optional deep scan against OSV.dev (free, no API key).", { status: "deep" }),
+    "This exact pinned dependency version appears in OSV.dev's disclosed advisory records.",
+    "Upgrade to a patched release listed in the advisory, or remove the dependency. Re-scan after changing the pin.",
+    { status: "deep" }),
 
   // ---------- Category 8: Manifest ----------
   rule("man-001", 8, "HIGH", "L9", "Declared capability mismatch",
@@ -202,12 +203,11 @@ export const RULES: Rule[] = [
 
   // ---------- Category 9: Signatures ----------
   rule("hash-001", 9, "CRITICAL", "L7", "Denylist hash match",
-    "Byte-identical to previously confirmed malicious content.",
-    "Hashing lands in 2C; the community list needs the optional free Supabase backend.",
-    { status: "pending" }),
+    "This file or bundle is byte-identical to content previously confirmed malicious and listed in the community denylist.",
+    "Do not install. Remove the file and report the hash to the community list maintainer."),
   rule("hash-002", 9, "INFO", "L7", "Allowlist hash match",
-    "Matches a previously reviewed skill. A confidence signal, never a bypass.",
-    "Hashing lands in 2C.", { status: "pending" }),
+    "This file or bundle matches a previously reviewed, trusted skill in the community allowlist. Content scanning still ran in case it has since been modified.",
+    "No action needed. Treat this as a confidence signal, not a bypass of the other findings."),
 
   // ---------- Category 10: Assets ----------
   rule("asset-001", 10, "CRITICAL", "L0", "Magic-byte / extension mismatch",
@@ -232,8 +232,8 @@ export const RULES: Rule[] = [
     "Instruction-shaped phrasing was found in a font's internal name-table strings (family, copyright, designer).",
     "Strip the name-table string. Font metadata should describe the font, not direct an agent."),
   rule("asset-006", 10, "MEDIUM", "L1", "Injection found via OCR",
-    "Instruction phrasing rendered as a picture of text.",
-    "Optional in-browser OCR pass.", { status: "pending" }),
+    "Instruction-shaped phrasing was recognized in text rendered inside an image. Text recognition is noisy, so this is reported at reduced confidence alongside the exact recognized text.",
+    "Open the image and confirm the wording yourself. If it is real, remove the image or the instruction text it carries."),
 ];
 
 export const RULE_BY_ID: Record<string, Rule> = Object.fromEntries(

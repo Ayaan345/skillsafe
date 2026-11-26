@@ -49,6 +49,23 @@ export interface FileHash {
   size: number;
 }
 
+export interface DependencyRef {
+  name: string;
+  version: string;
+  ecosystem: "npm" | "PyPI";
+  file: string;
+  line: number;
+  start: number;
+}
+
+export interface LinkRef {
+  url: string;
+  host: string;
+  file: string;
+  line: number;
+  start: number;
+}
+
 export type VerdictLabel =
   | "Critical risk"
   | "High risk"
@@ -69,6 +86,8 @@ export interface ScanReport {
   truncated: boolean;
   catalogVersion: number;
   hashes?: FileHash[];
+  dependencies?: DependencyRef[];
+  links?: LinkRef[];
   bundleHash?: string;
   ingestNotes?: { name: string; reason: string }[];
 }

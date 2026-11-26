@@ -5,8 +5,12 @@ import { detectLinks } from "./detect/links";
 import { detectManifest } from "./detect/manifest";
 import { detectSupply } from "./detect/supply";
 import { detectUnicode } from "./detect/unicode";
+import { collectDependencies } from "./detect/dependencies";
+import { collectLinkRefs } from "./detect/link-refs";
+import { checkHashes, loadHashLists } from "./hash-reputation";
 import { ingest } from "./l0";
 import { RULE_BY_ID } from "./rules";
+import { applyOverlay, catalogFingerprint, loadOverlay } from "./catalog";
 import { aggregate } from "./score";
 import { buildLineIndex, MAX_TEXT_PER_FILE, normalize } from "./text";
 import type { Finding, Layer, RawScanFile, ScanInputFile, ScanReport, SourceKind } from "./types";
@@ -80,9 +84,14 @@ export function scanFiles(
     truncated = true;
   }
 
+  const dependencies = Date.now() <= deadline ? collectDependencies(files, deadline) : [];
+  const links = Date.now() <= deadline ? collectLinkRefs(files, deadline) : [];
+
   const layers: Layer[] = extras.layers ?? ["L1", "L2", "L3", "L4", "L5", "L6"];
   const report = aggregate(findings, scanned, Date.now() - started, truncated, layers);
   report.durationMs = Date.now() - started;
+  if (dependencies.length > 0) report.dependencies = dependencies;
+  if (links.length > 0) report.links = links;
   if (extras.hashes) report.hashes = extras.hashes;
   if (extras.bundleHash) report.bundleHash = extras.bundleHash;
   if (extras.notes && extras.notes.length > 0) report.ingestNotes = extras.notes;
@@ -98,14 +107,28 @@ export async function scanRawFiles(raw: RawScanFile[], deadlineMs = SCAN_DEADLIN
   const l0Budget = Math.max(200, Math.floor(deadlineMs * 0.55));
   const result = await ingest(raw, started + l0Budget);
 
-  return scanFiles(result.files, deadlineMs, {
-    findings: result.findings,
+  const lists = await loadHashLists();
+  const hashFindings = checkHashes(result.hashes, result.bundleHash, lists);
+  const base = scanFiles(result.files, deadlineMs, {
+    findings: [...result.findings, ...hashFindings],
     hashes: result.hashes,
     bundleHash: result.bundleHash,
     notes: result.notes,
     truncated: result.truncated,
-    layers: ["L0", "L1", "L2", "L3", "L4", "L5", "L6"],
+    layers: ["L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"],
     startedAt: started,
     deadline: started + deadlineMs,
   });
+
+  const overlay = await loadOverlay();
+  const findings = applyOverlay(base.findings, overlay);
+  const report = aggregate(findings, base.filesScanned, Date.now() - started, base.truncated, base.layersRun);
+  report.durationMs = Date.now() - started;
+  report.catalogVersion = catalogFingerprint(overlay);
+  report.hashes = base.hashes;
+  report.bundleHash = base.bundleHash;
+  report.ingestNotes = base.ingestNotes;
+  report.dependencies = base.dependencies;
+  report.links = base.links;
+  return report;
 }

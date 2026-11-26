@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Optional report history and sharing
+
+Without Supabase configured, saved reports remain in the current browser session. To enable account-backed history and signed share links:
+
+1. Copy `.env.example` to `.env.local` and set the Supabase URL, anon key, and service-role key.
+2. Run `supabase/migrations/0002_persistence.sql` in the Supabase SQL editor.
+3. Set `REPORT_SIGNING_SECRET` to a random secret of at least 32 characters.
+4. Allow `/auth/callback` as a redirect URL in the Supabase Auth settings.
+
+The service-role key is used only on the server to read a report after its signed share token has been verified. Scans are not uploaded unless the user explicitly saves them.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -33,8 +33,8 @@ describe("catalog", () => {
     expect(new Set(RULES.map((r) => r.id)).size).toBe(45);
   });
 
-  it("has 39 active rules after L0 ingestion", () => {
-    expect(RULES.filter((r) => r.status === "active").length).toBe(39);
+  it("has 42 active rules after deep and reputation capabilities", () => {
+    expect(RULES.filter((r) => r.status === "active").length).toBe(42);
   });
 
   it("uses no unbounded quantifiers in any rule pattern", () => {
