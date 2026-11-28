@@ -5,9 +5,9 @@ import { displayPath } from "@/lib/scan/intake";
 import { SAMPLES, type Sample } from "@/lib/ui/samples";
 
 const TONE: Record<Sample["tone"], string> = {
-  danger: "#ff3b5c",
-  warn: "#ffc53d",
-  clean: "#3df5c4",
+  danger: "#b42332",
+  warn: "#946200",
+  clean: "#08745d",
 };
 
 function sizeLabel(bytes: number): string {
@@ -55,7 +55,7 @@ export function IntakePanel({
       >
         <div className="flex items-center justify-between gap-2">
           <label htmlFor="skill-text" className="ss-label">Skill source</label>
-          <span className="text-[10px] text-[#8296b3]">⌘/Ctrl + ↵</span>
+          <span className="text-[10px] text-[#65736d]">⌘/Ctrl + ↵</span>
         </div>
 
         <textarea
@@ -67,7 +67,7 @@ export function IntakePanel({
           placeholder={"# My Skill\n\nPaste the contents of SKILL.md here…"}
           className="ss-input ss-focus mt-2 font-mono leading-relaxed"
         />
-        <div className="mt-1 text-right text-[10px] text-[#8296b3]">
+        <div className="mt-1 text-right text-[10px] text-[#65736d]">
           {text.length.toLocaleString()} characters
         </div>
 
@@ -88,7 +88,7 @@ export function IntakePanel({
           <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={() => inputRef.current?.click()}>
             Choose files
           </button>
-          <span className="text-xs text-[#8296b3]">
+          <span className="text-xs text-[#65736d]">
             {dragging ? "release to add" : "or drop them on this panel"}
           </span>
         </div>
@@ -98,14 +98,14 @@ export function IntakePanel({
             {files.map((f, i) => (
               <li key={`${f.name}-${f.size}-${i}`} className="ss-chip w-full justify-between">
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#4da3ff]" />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#246b96]" />
                   <span className="truncate">{displayPath(f.name)}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="text-[#8296b3]">{sizeLabel(f.size)}</span>
+                  <span className="text-[#65736d]">{sizeLabel(f.size)}</span>
                   <button
                     type="button"
-                    className="ss-focus text-[#8296b3] hover:text-[#ff3b5c]"
+                    className="ss-focus text-[#65736d] hover:text-[#b42332]"
                     onClick={() => onRemoveFile(i)}
                     aria-label={`Remove ${displayPath(f.name)}`}
                   >
@@ -148,7 +148,7 @@ export function IntakePanel({
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: TONE[s.tone] }} />
                 <span className="text-[13px] font-semibold">{s.label}</span>
               </span>
-              <span className="text-[11px] font-normal leading-snug text-[#8fa3bf]">{s.blurb}</span>
+              <span className="text-[11px] font-normal leading-snug text-[#58655f]">{s.blurb}</span>
             </button>
           ))}
         </div>

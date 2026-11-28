@@ -37,10 +37,10 @@ export function DeepScan({
   };
 
   return (
-    <section className="ss-panel overflow-hidden border-l-2 border-l-[#a78bfa]">
+    <section className="ss-panel overflow-hidden border-l-2 border-l-[#58656b]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-        <span className="ss-label" style={{ color: "#a78bfa" }}>Deep scan · optional</span>
-        <span className="text-sm text-[#c3d2e6]">Dependency advisories (OSV.dev)</span>
+        <span className="ss-label" style={{ color: "#58656b" }}>Deep scan · optional</span>
+        <span className="text-sm text-[#374541]">Dependency advisories (OSV.dev)</span>
         <span className="ml-auto flex gap-1.5">
           {applied > 0 ? (
             <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={() => { onClear(); setNote(null); setChecked(0); }}>
@@ -54,9 +54,9 @@ export function DeepScan({
       </div>
 
       <div className="space-y-2 px-4 pb-4">
-        <p className="text-xs leading-relaxed text-[#8fa3bf]">
+        <p className="text-xs leading-relaxed text-[#58655f]">
           This is the only feature that leaves your device, and only when you press the button. It sends{" "}
-          <span className="text-[#c3d2e6]">package names and exact versions</span> — nothing else. No file content,
+          <span className="text-[#374541]">package names and exact versions</span> — nothing else. No file content,
           no filenames, no hashes, no scan results. Ranges and unpinned dependencies are skipped because advisories
           need an exact version.
         </p>
@@ -66,18 +66,18 @@ export function DeepScan({
         </button>
 
         {showPins ? (
-          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#a78bfa" }}>
+          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#58656b" }}>
             {dependencies.map((d) => `${d.ecosystem}  ${d.name}@${d.version}`).join("\n")}
           </pre>
         ) : null}
 
         {checked > 0 && !note ? (
-          <p className="text-xs text-[#3df5c4]">
+          <p className="text-xs text-[#08745d]">
             Checked {checked} pin(s) — {applied} advisory finding(s) merged into this report.
           </p>
         ) : null}
 
-        {note ? <p className="text-xs text-[#ffc53d]">{note}</p> : null}
+        {note ? <p className="text-xs text-[#946200]">{note}</p> : null}
       </div>
     </section>
   );

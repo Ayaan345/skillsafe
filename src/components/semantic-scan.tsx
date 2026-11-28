@@ -40,10 +40,10 @@ export function SemanticScan({
   };
 
   return (
-    <section className="ss-panel overflow-hidden border-l-2 border-l-[#a78bfa]">
+    <section className="ss-panel overflow-hidden border-l-2 border-l-[#58656b]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-        <span className="ss-label" style={{ color: "#a78bfa" }}>Deep scan · optional</span>
-        <span className="text-sm text-[#c3d2e6]">Semantic review (paraphrase backstop)</span>
+        <span className="ss-label" style={{ color: "#58656b" }}>Deep scan · optional</span>
+        <span className="text-sm text-[#374541]">Semantic review (paraphrase backstop)</span>
         <span className="ml-auto flex gap-1.5">
           {applied > 0 ? (
             <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={() => { onClear(); setNote(null); setChecked(0); }}>
@@ -62,25 +62,25 @@ export function SemanticScan({
       </div>
 
       <div className="space-y-2.5 px-4 pb-4">
-        <p className="text-xs leading-relaxed text-[#8fa3bf]">
+        <p className="text-xs leading-relaxed text-[#58655f]">
           Phrasing can be rewritten forever, so no regex list is ever complete. This sends{" "}
-          <span className="text-[#c3d2e6]">instructional prose</span> to a classification-only model with no tools
+          <span className="text-[#374541]">instructional prose</span> to a classification-only model with no tools
           and no ability to act, asking one question per passage: does this try to manipulate an agent reading it?
           The reply is a label and a confidence score, nothing else, and is treated as untrusted scanner data.
         </p>
 
-        <p className="rounded-md border border-[#3a2a1a] bg-[#1a1206] p-2.5 text-xs leading-relaxed text-[#ffc53d]">
+        <p className="rounded-md border border-[#e7d6a5] bg-[#fff9e7] p-2.5 text-xs leading-relaxed text-[#946200]">
           This is the one feature that sends <strong>actual skill text</strong> off your device, to the model
           provider. Do not use it on a skill that may contain live credentials or private material. Everything
           else in SkillSafe stays local.
         </p>
 
-        <label className="flex items-start gap-2 text-xs text-[#c3d2e6]">
+        <label className="flex items-start gap-2 text-xs text-[#374541]">
           <input
             type="checkbox"
             checked={consented}
             onChange={(e) => setConsented(e.target.checked)}
-            className="ss-focus mt-0.5 h-3.5 w-3.5 accent-[#a78bfa]"
+            className="ss-focus mt-0.5 h-3.5 w-3.5 accent-[#58656b]"
           />
           <span>I understand this sends the passages below to a model provider, and I want to run it.</span>
         </label>
@@ -97,7 +97,7 @@ export function SemanticScan({
             spellCheck={false}
             className="ss-input ss-focus mt-1.5 font-mono"
           />
-          <p className="mt-1 text-[11px] text-[#8296b3]">
+          <p className="mt-1 text-[11px] text-[#65736d]">
             Held in this page&apos;s memory only, sent once with this request, never stored, logged, or written to disk.
           </p>
         </div>
@@ -107,18 +107,18 @@ export function SemanticScan({
         </button>
 
         {showChunks ? (
-          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#a78bfa" }}>
+          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#58656b" }}>
             {chunks.map((c, i) => `--- PASSAGE ${i} (${c.file}:${c.line}) ---\n${c.text}`).join("\n\n")}
           </pre>
         ) : null}
 
         {checked > 0 && !note ? (
-          <p className="text-xs text-[#3df5c4]">
+          <p className="text-xs text-[#08745d]">
             Classified {checked} passage(s) — {applied} finding(s) merged into this report.
           </p>
         ) : null}
 
-        {note ? <p className="text-xs text-[#ffc53d]">{note}</p> : null}
+        {note ? <p className="text-xs text-[#946200]">{note}</p> : null}
       </div>
     </section>
   );

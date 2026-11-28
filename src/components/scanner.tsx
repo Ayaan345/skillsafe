@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { EngineStatus } from "@/components/engine-status";
 import { IntakePanel } from "@/components/intake-panel";
 import { Report } from "@/components/report";
@@ -37,13 +36,18 @@ export function Scanner() {
   const [skipped, setSkipped] = useState<{ name: string; reason: string }[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [scanId, setScanId] = useState(0);
+  const [url, setUrl] = useState("");
+  const [urlBusy, setUrlBusy] = useState(false);
+  const [urlNote, setUrlNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
   const { state, scan, reset } = useScanner();
+  const running = state.status === "running";
 
   const addFiles = useCallback((picked: File[]) => {
     setFiles((prev) => [...prev, ...picked].slice(0, 300));
   }, []);
 
   const runScan = useCallback(async () => {
+    if (urlBusy) return;
     setNotice(null);
     const plan = planIntake(files.map((f) => ({ name: f.name, size: f.size })));
     setSkipped(plan.skipped);
@@ -65,7 +69,7 @@ export function Scanner() {
     }
     setScanId((n) => n + 1);
     await scan(inputs);
-  }, [files, text, scan]);
+  }, [files, text, scan, urlBusy]);
 
   const onSample = useCallback(async (s: Sample) => {
     setText(s.content);
@@ -78,7 +82,59 @@ export function Scanner() {
 
   const onClear = useCallback(() => {
     setText(""); setFiles([]); setSkipped([]); setNotice(null); reset();
+    setUrlNote(null);
   }, [reset]);
+
+  const fetchUrl = useCallback(async () => {
+    if (urlBusy || running || !url.trim()) return;
+    setUrlBusy(true);
+    setUrlNote(null);
+    try {
+      const response = await fetch("/api/fetch-skill", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const result: unknown = await response.json().catch(() => null);
+      if (!response.ok || !result || typeof result !== "object" || !("ok" in result) || result.ok !== true) {
+        const error = result && typeof result === "object" && "error" in result && typeof result.error === "string"
+          ? result.error
+          : "Fetch failed.";
+        setUrlNote({ tone: "warn", text: error });
+        return;
+      }
+
+      const fetched = result as { ok: true; name?: unknown; bytes?: unknown; size?: unknown };
+      if (
+        typeof fetched.name !== "string" ||
+        typeof fetched.bytes !== "string" ||
+        fetched.bytes.length > 14_000_000 ||
+        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(fetched.bytes)
+      ) {
+        setUrlNote({ tone: "warn", text: "Fetch endpoint returned an invalid file." });
+        return;
+      }
+      const binary = atob(fetched.bytes);
+      if (binary.length > 10 * 1024 * 1024) {
+        setUrlNote({ tone: "warn", text: "Remote file exceeds the 10MB limit." });
+        return;
+      }
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      setText("");
+      setFiles([]);
+      setSkipped([]);
+      setNotice(null);
+      setScanId((n) => n + 1);
+      const size = typeof fetched.size === "number" ? fetched.size : bytes.byteLength;
+      setUrlNote({ tone: "ok", text: `Fetched ${fetched.name} (${size} bytes). Scanning on your device.` });
+      await scan([{ path: fetched.name, bytes }]);
+    } catch {
+      setUrlNote({ tone: "warn", text: "Could not reach the fetch endpoint." });
+    } finally {
+      setUrlBusy(false);
+    }
+  }, [url, urlBusy, running, scan]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -88,47 +144,14 @@ export function Scanner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [runScan]);
 
-  const running = state.status === "running";
-
   return (
     <>
-      <div className="ss-bg" />
-      <div className="ss-grid" />
-
-      <header className="ss-bar">
-        <div className="flex items-center gap-2.5">
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2 4 5.5v6.2c0 5 3.4 9.3 8 10.3 4.6-1 8-5.3 8-10.3V5.5Z"
-              fill="none" stroke="#3df5c4" strokeWidth="1.6" strokeLinejoin="round" />
-            <circle cx="12" cy="11.5" r="3.1" fill="none" stroke="#4da3ff" strokeWidth="1.6" />
-            <path d="M12 8.4v6.2M8.9 11.5h6.2" stroke="#a78bfa" strokeWidth="1.2" />
-          </svg>
-          <span className="text-[15px] font-bold tracking-tight">SkillSafe</span>
-        </div>
-        <span className="ss-chip hidden sm:inline-flex">
-          <span className="ss-dot" />
-          on-device · nothing uploaded
-        </span>
-        <nav className="ml-auto flex items-center gap-1.5">
-          {state.status === "done" ? (
-            <a href="#findings" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">Findings</a>
-          ) : null}
-          <Link href="/rules" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">Rule catalog</Link>
-          <Link href="/history" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">History</Link>
-          <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={onClear} disabled={running}>
-            Reset
-          </button>
-        </nav>
-      </header>
-
-      <main className="ss-main relative z-10 mx-auto max-w-[1320px] px-4">
-        <div className="mb-5">
-          <h1 className="text-[26px] font-bold leading-tight tracking-tight sm:text-[32px]">
-            Read a skill before it reads <span className="ss-headline">you</span>.
-          </h1>
-          <p className="mt-1.5 max-w-2xl text-sm text-[#8fa3bf]">
-            Prompt injection, hidden Unicode, deceptive links, dangerous code, supply-chain hooks and
-            asset payloads — checked in your browser, with no account and no upload.
+      <main className="ss-main">
+        <div className="app-page__heading">
+          <h1>Security scans for AI skills</h1>
+          <p>
+            Check skill files for prompt injection, hidden text, unsafe links, and dangerous code before installing.
+            42 rules run on every scan in your browser.
           </p>
         </div>
 
@@ -137,8 +160,36 @@ export function Scanner() {
             <IntakePanel
               text={text} onText={setText} files={files} onFiles={addFiles}
               onRemoveFile={(i) => setFiles((prev) => prev.filter((_, j) => j !== i))}
-              onScan={runScan} onClear={onClear} onSample={onSample} running={running}
+              onScan={runScan} onClear={onClear} onSample={onSample} running={running || urlBusy}
             />
+            <div className="ss-panel mt-3 space-y-2 p-4">
+              <label htmlFor="skill-url" className="ss-label">Fetch from a public URL</label>
+              <input
+                id="skill-url"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter") void fetchUrl(); }}
+                placeholder="https://raw.githubusercontent.com/…/SKILL.md"
+                spellCheck={false}
+                className="ss-input ss-focus font-mono text-xs"
+              />
+              <button
+                type="button"
+                className={`ss-btn ss-btn-sm ss-focus w-full ${urlBusy ? "ss-sweep" : ""}`}
+                onClick={fetchUrl}
+                disabled={urlBusy || running}
+              >
+                {urlBusy ? "Fetching…" : "Fetch & scan"}
+              </button>
+              <p className="text-[11px] leading-relaxed text-[#65736d]">
+                Our server fetches it — never your browser — with credentials omitted, every redirect hop
+                re-validated against the private-host blocklist, an 8-second timeout and a 10MB streaming cap.
+                GitHub blob links are rewritten to raw. The bytes come back here and are scanned on your device.
+              </p>
+              {urlNote ? (
+                <p className="text-xs" style={{ color: urlNote.tone === "ok" ? "#08745d" : "#946200" }}>{urlNote.text}</p>
+              ) : null}
+            </div>
           </div>
 
           <div className="min-w-0 space-y-3">
@@ -148,25 +199,25 @@ export function Scanner() {
               <span className="ss-label">Pipeline</span>
               {LAYERS.map((l, i) => (
                 <span key={l.id}
-                  className={`text-xs font-semibold ${running ? "ss-layer-on" : "text-[#8296b3]"}`}
+                  className={`text-xs font-semibold ${running ? "ss-layer-on" : "text-[#65736d]"}`}
                   style={running ? { animationDelay: `${i * 0.12}s` } : undefined}>
                   {l.id} <span className="font-normal">{l.name}</span>
                 </span>
               ))}
-              <span className="ml-auto text-[11px] text-[#8296b3]">45/45 rules · deep layers opt-in</span>
+              <span className="ml-auto text-[11px] text-[#65736d]">45/45 rules · deep layers opt-in</span>
             </div>
 
             {notice ? (
-              <p className="ss-panel border-l-2 border-l-[#ffc53d] p-4 text-sm text-[#ffc53d]">{notice}</p>
+              <p className="ss-panel border-l-2 border-l-[#946200] p-4 text-sm text-[#946200]">{notice}</p>
             ) : null}
 
             {skipped.length > 0 ? (
-              <div className="ss-panel border-l-2 border-l-[#4da3ff] p-4">
-                <div className="ss-label" style={{ color: "#4da3ff" }}>{skipped.length} file(s) skipped</div>
+              <div className="ss-panel border-l-2 border-l-[#246b96] p-4">
+                <div className="ss-label" style={{ color: "#246b96" }}>{skipped.length} file(s) skipped</div>
                 <ul className="mt-1.5 space-y-1">
                   {skipped.map((s, i) => (
-                    <li key={`${s.name}-${i}`} className="text-xs text-[#8fa3bf]">
-                      <span className="font-mono text-[#c3d2e6]">{displayPath(s.name)}</span> — {s.reason}
+                    <li key={`${s.name}-${i}`} className="text-xs text-[#58655f]">
+                      <span className="font-mono text-[#374541]">{displayPath(s.name)}</span> — {s.reason}
                     </li>
                   ))}
                 </ul>
@@ -174,11 +225,11 @@ export function Scanner() {
             ) : null}
 
             {state.status === "error" ? (
-              <p className="ss-panel border-l-2 border-l-[#ff3b5c] p-4 text-sm text-[#ff3b5c]">{state.message}</p>
+              <p className="ss-panel border-l-2 border-l-[#b42332] p-4 text-sm text-[#b42332]">{state.message}</p>
             ) : null}
 
             {running ? (
-              <div role="status" className="ss-panel ss-sweep p-8 text-center text-sm text-[#8fa3bf]">
+              <div role="status" className="ss-panel ss-sweep p-8 text-center text-sm text-[#58655f]">
                 Extracting, hashing and running bounded patterns…
               </div>
             ) : null}
@@ -188,15 +239,15 @@ export function Scanner() {
                 <div className="ss-label">What gets inspected</div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {COVERAGE.map(([n, title, desc]) => (
-                    <div key={n} className="rounded-lg border border-[#18233c] bg-[#0b1120] p-3">
+                    <div key={n} className="rounded-lg border border-[#e4e9e5] bg-[#ffffff] p-3">
                       <div className="text-[13px] font-semibold">
-                        <span className="text-[#8296b3]">{n}.</span> {title}
+                        <span className="text-[#65736d]">{n}.</span> {title}
                       </div>
-                      <div className="mt-0.5 text-[11px] leading-snug text-[#8fa3bf]">{desc}</div>
+                      <div className="mt-0.5 text-[11px] leading-snug text-[#58655f]">{desc}</div>
                     </div>
                   ))}
                 </div>
-                <p className="mt-4 text-xs text-[#8296b3]">
+                <p className="mt-4 text-xs text-[#65736d]">
                   Pick a sample on the left for a full report immediately, or choose a .zip skill folder.
                 </p>
               </div>

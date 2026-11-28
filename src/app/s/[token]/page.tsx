@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 import { Verdict } from "@/components/verdict";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { verifyShareToken } from "@/lib/share/token";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Shared report · SkillSafe", robots: { index: false, follow: false } };
 
 const SEV_COLOR: Record<Severity, string> = {
-  CRITICAL: "#ff3b5c", HIGH: "#ff8a3d", MEDIUM: "#ffc53d", LOW: "#4da3ff", INFO: "#a78bfa",
+  CRITICAL: "#b42332", HIGH: "#b54708", MEDIUM: "#946200", LOW: "#246b96", INFO: "#58656b",
 };
 
 export default async function SharedPage({ params }: { params: Promise<{ token: string }> }) {
@@ -56,19 +57,12 @@ export default async function SharedPage({ params }: { params: Promise<{ token: 
   }
 
   return (
-    <>
-      <div className="ss-bg" />
-      <div className="ss-grid" />
-      <header className="ss-bar">
-        <Link href="/" className="ss-focus text-[15px] font-bold tracking-tight">SkillSafe</Link>
-        <span className="ss-chip ml-auto">read-only shared report</span>
-      </header>
-
-      <main className="relative z-10 mx-auto max-w-[900px] space-y-4 px-4 pb-16 pt-[calc(var(--bar-h)+26px)]">
+    <AppShell variant="shared">
+      <main className="app-page max-w-[900px] space-y-5">
         {!report ? (
-          <div className="ss-panel border-l-2 border-l-[#ff3b5c] p-6">
-            <h1 className="text-xl font-bold text-[#ff3b5c]">This link is not available</h1>
-            <p className="mt-2 text-sm text-[#8fa3bf]">
+          <div className="ss-panel border-l-2 border-l-[#b42332] p-6">
+            <h1 className="text-xl font-bold text-[#b42332]">This link is not available</h1>
+            <p className="mt-2 text-sm text-[#58655f]">
               It may have expired, been revoked by its owner, or the signature does not match. Share links are
               signed and valid for seven days.
             </p>
@@ -86,26 +80,26 @@ export default async function SharedPage({ params }: { params: Promise<{ token: 
                 <div className="ss-label">{group.category}. {group.categoryName}</div>
                 <ul className="mt-2 space-y-2">
                   {group.findings.map((f, i) => (
-                    <li key={`${f.ruleId}-${i}`} className="rounded-md border border-[#18233c] p-3">
+                    <li key={`${f.ruleId}-${i}`} className="rounded-md border border-[#e4e9e5] p-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`ss-pill ss-${f.severity}`}>{f.severity}</span>
-                        <code className="text-xs text-[#3df5c4]">{f.ruleId}</code>
-                        <span className="text-[11px] text-[#8296b3]">{f.file}:{f.line}</span>
+                        <code className="text-xs text-[#08745d]">{f.ruleId}</code>
+                        <span className="text-[11px] text-[#65736d]">{f.file}:{f.line}</span>
                       </div>
                       <pre dir="ltr" className="ss-evidence mt-2" style={{ borderLeftColor: SEV_COLOR[f.severity] }}>{f.snippet}</pre>
-                      <p className="mt-2 text-sm text-[#c3d2e6]">{f.why}</p>
-                      <p className="mt-1 text-sm text-[#8fa3bf]">{f.fix}</p>
+                      <p className="mt-2 text-sm text-[#374541]">{f.why}</p>
+                      <p className="mt-1 text-sm text-[#58655f]">{f.fix}</p>
                     </li>
                   ))}
                 </ul>
               </section>
             ))}
-            <p className="text-xs text-[#8296b3]">
+            <p className="text-xs text-[#65736d]">
               Static analysis only. A clean report means no known pattern matched, not that the skill is certified safe.
             </p>
           </>
         )}
       </main>
-    </>
+    </AppShell>
   );
 }

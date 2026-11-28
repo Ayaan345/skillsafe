@@ -83,7 +83,7 @@ export function SaveReport({
         </button>
         <Link href="/history" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus">Open history</Link>
         {note ? (
-          <p className="w-full text-xs" style={{ color: note.tone === "ok" ? "#3df5c4" : "#ffc53d" }}>
+          <p className="w-full text-xs" style={{ color: note.tone === "ok" ? "#08745d" : "#946200" }}>
             {note.text}
           </p>
         ) : null}

@@ -77,3 +77,21 @@ security restricts saved records to their owner.
 The server-side service-role key is used only to load a report after its signed
 share token has been verified. Share tokens are HMAC-signed, expire after seven
 days, and can be revoked. No service-role key is exposed to the browser.
+
+## Public URL fetch
+
+When a user explicitly submits a public URL, the `/api/fetch-skill` route
+requests that URL server-side without cookies or credentials. Redirects are
+revalidated, DNS is pinned to a resolved public IPv4 address, and each response
+is limited to 10 MB with an eight-second timeout. The fetched bytes are returned
+to the user's browser for local scanning; they are not saved by this feature.
+The remote host receives the fetch request from the deployment server.
+
+## Team workspaces and scan comparison
+
+Team names, member roles, invite emails, and team-sharing assignments are stored
+in Supabase when accounts are configured. A team member can read reports shared
+with their team; private reports remain visible only to their owner. Invite
+links expire after seven days and are bound to the invited account email.
+Comparing scans uses report data already available in session memory or account
+history and makes no additional outbound request.

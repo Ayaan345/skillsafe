@@ -36,10 +36,10 @@ export function OcrScan({
   };
 
   return (
-    <section className="ss-panel overflow-hidden border-l-2 border-l-[#4da3ff]">
+    <section className="ss-panel overflow-hidden border-l-2 border-l-[#246b96]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-        <span className="ss-label" style={{ color: "#4da3ff" }}>Deep scan · optional</span>
-        <span className="text-sm text-[#c3d2e6]">Read text inside images (OCR)</span>
+        <span className="ss-label" style={{ color: "#246b96" }}>Deep scan · optional</span>
+        <span className="text-sm text-[#374541]">Read text inside images (OCR)</span>
         <span className="ml-auto flex gap-1.5">
           {applied > 0 ? (
             <button
@@ -62,8 +62,8 @@ export function OcrScan({
       </div>
 
       <div className="space-y-2 px-4 pb-4">
-        <p className="text-xs leading-relaxed text-[#8fa3bf]">
-          Catches an instruction hidden as a <span className="text-[#c3d2e6]">picture of text</span> rather than a
+        <p className="text-xs leading-relaxed text-[#58655f]">
+          Catches an instruction hidden as a <span className="text-[#374541]">picture of text</span> rather than a
           string — the case a reviewer skimming the markdown never sees. Recognition runs in your browser; image
           pixels are never uploaded. Only the locally served recognition library is loaded. Text recognition is
           noisy, so these findings are Medium at reduced confidence and always show the exact recognized text.
@@ -71,12 +71,12 @@ export function OcrScan({
         </p>
 
         {processed > 0 && !note ? (
-          <p className="text-xs text-[#3df5c4]">
+          <p className="text-xs text-[#08745d]">
             Read {processed} image(s) — {applied} finding(s) merged into this report.
           </p>
         ) : null}
 
-        {note ? <p className="text-xs text-[#ffc53d]">{note}</p> : null}
+        {note ? <p className="text-xs text-[#946200]">{note}</p> : null}
       </div>
     </section>
   );

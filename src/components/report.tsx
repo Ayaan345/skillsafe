@@ -119,7 +119,7 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
   return (
     <div className="space-y-3" aria-live="polite">
       {staleCatalog ? (
-        <p className="ss-panel border-l-2 border-l-[#ffc53d] p-3 text-xs text-[#ffc53d]">
+        <p className="ss-panel border-l-2 border-l-[#946200] p-3 text-xs text-[#946200]">
           The rule catalog moved to overlay v{liveVersion} after this scan ran. Re-scan to apply the latest tuning.
         </p>
       ) : null}
@@ -190,10 +190,10 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
           {ALL_SEVERITIES.map((s) => (
             <button key={s} type="button" onClick={() => toggleSeverity(s)} aria-pressed={filters.severities.includes(s)}
               className={`ss-btn ss-btn-sm ss-focus ${filters.severities.includes(s) ? "ss-btn-on" : ""}`}>
-              {s} <span className="text-[#8296b3]">{report.counts[s]}</span>
+              {s} <span className="text-[#65736d]">{report.counts[s]}</span>
             </button>
           ))}
-          <span className="mx-1 h-4 w-px bg-[#24334f]" />
+          <span className="mx-1 h-4 w-px bg-[#d3ddd7]" />
           {FILTER_PRESETS.map((p) => (
             <button key={p.id} type="button" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus"
               onClick={() => setFilters(p.state)}>
@@ -203,7 +203,7 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-[#8296b3]">
+          <span className="text-xs text-[#65736d]">
             {visible.length} shown · {effective.findings.length} active
           </span>
           <div className="ml-auto flex flex-wrap gap-1.5">
@@ -238,7 +238,7 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
       </div>
 
       {groups.length === 0 ? (
-        <p className="ss-panel p-5 text-sm text-[#8fa3bf]">
+        <p className="ss-panel p-5 text-sm text-[#58655f]">
           {merged.findings.length === 0
             ? "Nothing matched. Pair a clean report with least-privilege execution — static analysis cannot observe runtime behavior."
             : "No findings match the current filters."}
@@ -251,11 +251,11 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
               <section key={g.key} className="ss-panel ss-section overflow-hidden">
                 <button type="button" onClick={() => toggleGroup(g.key)} aria-expanded={open}
                   className="ss-focus flex w-full items-center gap-3 px-4 py-3 text-left">
-                  <span className="text-[#8296b3]">{open ? "▾" : "▸"}</span>
+                  <span className="text-[#65736d]">{open ? "▾" : "▸"}</span>
                   <span className="min-w-0 truncate font-semibold">{g.title}</span>
                   <span className="ml-auto flex shrink-0 items-center gap-2.5">
                     <span className={`ss-pill ss-${g.topSeverity}`}>{g.topSeverity}</span>
-                    <span className="text-sm text-[#8fa3bf]">{g.findings.length}</span>
+                    <span className="text-sm text-[#58655f]">{g.findings.length}</span>
                   </span>
                 </button>
                 {open ? (
@@ -275,7 +275,7 @@ export function Report({ report, mode, raw }: { report: ScanReport; mode: ScanMo
         </div>
       )}
 
-      <p className="px-1 text-xs leading-relaxed text-[#8296b3]">
+      <p className="px-1 text-xs leading-relaxed text-[#65736d]">
         All 45 catalog rules are implemented. 42 run on every scan; advisories, live link reputation, OCR and
         semantic review are opt-in and off until you press them
         {deepChecked > 0 ? ` (${deepChecked} pin(s) checked this session)` : ""}. False-positive marks feed the

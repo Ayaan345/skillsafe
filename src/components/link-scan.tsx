@@ -37,10 +37,10 @@ export function LinkScan({
   };
 
   return (
-    <section className="ss-panel overflow-hidden border-l-2 border-l-[#ff8a3d]">
+    <section className="ss-panel overflow-hidden border-l-2 border-l-[#b54708]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-        <span className="ss-label" style={{ color: "#ff8a3d" }}>Deep scan · optional</span>
-        <span className="text-sm text-[#c3d2e6]">Live link reputation</span>
+        <span className="ss-label" style={{ color: "#b54708" }}>Deep scan · optional</span>
+        <span className="text-sm text-[#374541]">Live link reputation</span>
         <span className="ml-auto flex gap-1.5">
           {applied > 0 ? (
             <button type="button" className="ss-btn ss-btn-sm ss-focus" onClick={() => { onClear(); setNote(null); setChecked(0); }}>
@@ -54,9 +54,9 @@ export function LinkScan({
       </div>
 
       <div className="space-y-2 px-4 pb-4">
-        <p className="text-xs leading-relaxed text-[#8fa3bf]">
+        <p className="text-xs leading-relaxed text-[#58655f]">
           Structural checks already ran offline. This asks Google Safe Browsing whether the{" "}
-          <span className="text-[#c3d2e6]">live destinations</span> are currently listed as malware or phishing —
+          <span className="text-[#374541]">live destinations</span> are currently listed as malware or phishing —
           the case a perfectly normal-looking HTTPS link to a freshly registered domain would otherwise pass.
           Only the URLs are sent, via our own server. No file content, filenames, or hashes. Internal, link-local
           and cloud-metadata hosts are refused before egress.
@@ -67,18 +67,18 @@ export function LinkScan({
         </button>
 
         {showUrls ? (
-          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#ff8a3d" }}>
+          <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#b54708" }}>
             {links.map((l) => l.url).join("\n")}
           </pre>
         ) : null}
 
         {checked > 0 && !note ? (
-          <p className="text-xs text-[#3df5c4]">
+          <p className="text-xs text-[#08745d]">
             Looked up {checked} destination(s) — {applied} listing(s) merged into this report.
           </p>
         ) : null}
 
-        {note ? <p className="text-xs text-[#ffc53d]">{note}</p> : null}
+        {note ? <p className="text-xs text-[#946200]">{note}</p> : null}
       </div>
     </section>
   );

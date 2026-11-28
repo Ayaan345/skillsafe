@@ -59,11 +59,11 @@ export function EngineStatus() {
         aria-expanded={open}
         className="ss-focus flex w-full items-center gap-3 px-4 py-2.5 text-left"
       >
-        <span className="text-[#8296b3]">{open ? "▾" : "▸"}</span>
+        <span className="text-[#65736d]">{open ? "▾" : "▸"}</span>
         <span className="ss-label">Engine diagnostics</span>
         <span
           className="ml-auto text-[11px] font-semibold"
-          style={{ color: bad ? "#ffc53d" : "#3df5c4" }}
+          style={{ color: bad ? "#946200" : "#08745d" }}
         >
           {violations.length > 0 ? `${violations.length} CSP block(s)` : bad ? "degraded" : "nominal"}
         </span>
@@ -89,19 +89,19 @@ export function EngineStatus() {
           </button>
 
           {selfTest ? (
-            <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#3df5c4" }}>
+            <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#08745d" }}>
               {selfTest}
             </pre>
           ) : null}
 
           {violations.length > 0 ? (
             <div>
-              <div className="ss-label" style={{ color: "#ff3b5c" }}>
+              <div className="ss-label" style={{ color: "#b42332" }}>
                 Content-Security-Policy blocked these
               </div>
               <ul className="mt-1.5 space-y-1">
                 {violations.map((v) => (
-                  <li key={v} className="font-mono text-[11px] break-all text-[#ff8a3d]">{v}</li>
+                  <li key={v} className="font-mono text-[11px] break-all text-[#b54708]">{v}</li>
                 ))}
               </ul>
             </div>

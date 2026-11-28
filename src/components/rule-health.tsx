@@ -23,31 +23,31 @@ export function RuleHealth() {
         aria-expanded={open}
         className="ss-focus flex w-full items-center gap-3 px-4 py-3 text-left"
       >
-        <span className="text-[#8296b3]">{open ? "▾" : "▸"}</span>
+        <span className="text-[#65736d]">{open ? "▾" : "▸"}</span>
         <span className="font-semibold">Rule health · feedback queue</span>
-        <span className="ml-auto text-sm text-[#8fa3bf]">{total} mark(s) · {rows.length} rule(s)</span>
+        <span className="ml-auto text-sm text-[#58655f]">{total} mark(s) · {rows.length} rule(s)</span>
       </button>
 
       {open ? (
         <div className="space-y-3 px-4 pb-4">
-          <p className="text-xs leading-relaxed text-[#8fa3bf]">
+          <p className="text-xs leading-relaxed text-[#58655f]">
             Every false-positive mark you make this session accumulates here. This is the loop that retunes the
             catalog: a pattern that proves reliably noisy gets its confidence lowered or gets retired through{" "}
-            <span className="font-mono text-[#c3d2e6]">rule-catalog.json</span> — no redeploy. Export carries counts
+            <span className="font-mono text-[#374541]">rule-catalog.json</span> — no redeploy. Export carries counts
             only, never content.
           </p>
 
           <ul className="space-y-1">
             {rows.map((row) => (
               <li key={row.ruleId} className="flex items-center gap-3 text-xs">
-                <code className="font-semibold text-[#3df5c4]">{row.ruleId}</code>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#18233c]">
+                <code className="font-semibold text-[#08745d]">{row.ruleId}</code>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e4e9e5]">
                   <div
                     className="h-full rounded-full"
-                    style={{ width: `${Math.min(100, (row.net / Math.max(1, total)) * 100)}%`, background: "linear-gradient(90deg,#ffc53d,#ff8a3d)" }}
+                    style={{ width: `${Math.min(100, (row.net / Math.max(1, total)) * 100)}%`, background: "#946200" }}
                   />
                 </div>
-                <span className="w-16 text-right text-[#8fa3bf]">{row.net} net</span>
+                <span className="w-16 text-right text-[#58655f]">{row.net} net</span>
               </li>
             ))}
           </ul>

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SkillSafe",
-  description: "Scan a Claude Skill for prompt injection, hidden content, and dangerous code — in your browser.",
+  title: "SkillSafe — security scans for AI skills",
+  description: "Check AI skill files for prompt injection, hidden content, unsafe links, and dangerous code in your browser.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

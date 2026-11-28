@@ -25,9 +25,9 @@ export function Artifacts({ report }: { report: ScanReport }) {
     <section className="ss-panel overflow-hidden">
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open}
         className="ss-focus flex w-full items-center gap-3 px-4 py-3 text-left">
-        <span className="text-[#8296b3]">{open ? "▾" : "▸"}</span>
+        <span className="text-[#65736d]">{open ? "▾" : "▸"}</span>
         <span className="font-semibold">Artifacts &amp; ingestion</span>
-        <span className="ml-auto text-sm text-[#8fa3bf]">
+        <span className="ml-auto text-sm text-[#58655f]">
           {hashes.length} hashed{notes.length > 0 ? ` · ${notes.length} note(s)` : ""}
         </span>
       </button>
@@ -37,7 +37,7 @@ export function Artifacts({ report }: { report: ScanReport }) {
           {report.bundleHash ? (
             <div>
               <div className="ss-label">Bundle SHA-256</div>
-              <pre dir="ltr" className="ss-evidence mt-1.5" style={{ borderLeftColor: "#4da3ff" }}>
+              <pre dir="ltr" className="ss-evidence mt-1.5" style={{ borderLeftColor: "#246b96" }}>
                 {report.bundleHash}
               </pre>
             </div>
@@ -48,10 +48,10 @@ export function Artifacts({ report }: { report: ScanReport }) {
               <div className="ss-label">Per-file SHA-256</div>
               <ul className="mt-1.5 space-y-1.5">
                 {hashes.map((h) => (
-                  <li key={h.path} className="text-xs text-[#8fa3bf]">
-                    <span className="font-mono text-[#c3d2e6]">{displayPath(h.path)}</span>
-                    <span className="ml-2 text-[#8296b3]">{h.size} B</span>
-                    <div className="font-mono break-all text-[#8296b3]">{h.sha256}</div>
+                  <li key={h.path} className="text-xs text-[#58655f]">
+                    <span className="font-mono text-[#374541]">{displayPath(h.path)}</span>
+                    <span className="ml-2 text-[#65736d]">{h.size} B</span>
+                    <div className="font-mono break-all text-[#65736d]">{h.sha256}</div>
                   </li>
                 ))}
               </ul>
@@ -60,11 +60,11 @@ export function Artifacts({ report }: { report: ScanReport }) {
 
           {notes.length > 0 ? (
             <div>
-              <div className="ss-label" style={{ color: "#ffc53d" }}>Ingestion notes</div>
+              <div className="ss-label" style={{ color: "#946200" }}>Ingestion notes</div>
               <ul className="mt-1.5 space-y-1">
                 {notes.map((n, i) => (
-                  <li key={`${n.name}-${i}`} className="text-xs text-[#8fa3bf]">
-                    <span className="font-mono text-[#c3d2e6]">{displayPath(n.name)}</span> — {n.reason}
+                  <li key={`${n.name}-${i}`} className="text-xs text-[#58655f]">
+                    <span className="font-mono text-[#374541]">{displayPath(n.name)}</span> — {n.reason}
                   </li>
                 ))}
               </ul>
@@ -73,12 +73,12 @@ export function Artifacts({ report }: { report: ScanReport }) {
 
           <div>
             <div className="ss-label">Hash reputation lists</div>
-            <p className="mt-1.5 text-xs text-[#8fa3bf]">
+            <p className="mt-1.5 text-xs text-[#58655f]">
               {lists.version === 0
                 ? "No reputation list reachable. Hashes were computed and content scanning ran normally; only exact-match reputation is unavailable."
                 : `List v${lists.version}${lists.updated ? ` · updated ${lists.updated}` : ""} · ${lists.denylist.length} denylisted · ${lists.allowlist.length} allowlisted.`}
             </p>
-            <p className="mt-1 text-xs text-[#8296b3]">
+            <p className="mt-1 text-xs text-[#65736d]">
               The list is a static file served from this site. It stores hashes only, never content,
               and updates without a redeploy. Fetching it sends no scan data.
             </p>

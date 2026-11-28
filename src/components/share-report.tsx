@@ -38,11 +38,11 @@ export function ShareReport({ scanId }: { scanId: string | null }) {
           <button type="button" className="ss-btn ss-btn-sm ss-btn-ghost ss-focus" onClick={() => navigator.clipboard.writeText(link)}>Copy</button>
         ) : null}
       </div>
-      {link ? <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#3df5c4" }}>{link}</pre> : null}
-      <p className="text-[11px] text-[#8296b3]">
+      {link ? <pre dir="ltr" className="ss-evidence" style={{ borderLeftColor: "#08745d" }}>{link}</pre> : null}
+      <p className="text-[11px] text-[#65736d]">
         Signed, expires in seven days, revocable at any time. Anyone with the link sees the report read-only.
       </p>
-      {note ? <p className="text-xs text-[#ffc53d]">{note}</p> : null}
+      {note ? <p className="text-xs text-[#946200]">{note}</p> : null}
     </section>
   );
 }
